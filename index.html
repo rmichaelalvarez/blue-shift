@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--
+  Why the Lead Changes: Simulating Blue and Red Shifts in Vote Counting — version 1.0 (October 27, 2026)
+  Author: R. Michael Alvarez, California Institute of Technology.
+  Code and text drafted with Claude Opus 5.5 (model ID claude-opus-5-5), an AI model made by Anthropic, working with the author.
+  License: MIT (see LICENSE). Copyright (c) 2026 R. Michael Alvarez.
+  Single self-contained page: no build step, no tracking, no data leaves the browser. Fonts load from Google Fonts.
+-->
+<title>Why the Lead Changes: Simulating Blue and Red Shifts in Vote Counting</title>
+<meta name="description" content="An interactive simulation of why election-night leads change as mail and provisional ballots are counted: blue shifts, red shifts, and the voters behind them.">
+<meta name="author" content="R. Michael Alvarez">
+<!-- Social previews. Most sites need an absolute image URL: replace social-preview.png with the full address once the site is live
+     (for example https://rmichaelalvarez.github.io/blue-shift/social-preview.png). -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Why the Lead Changes: Simulating Blue and Red Shifts in Vote Counting">
+<meta property="og:description" content="Change who votes when, and the order ballots are counted, and watch the election-night lead move. By R. Michael Alvarez, California Institute of Technology.">
+<meta property="og:image" content="social-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #f4f5f2; --panel: #ffffff; --ink: #16181d; --muted: #555b66; --rule: #d9dcd6;
+  --dem: #1f5fbf; --rep: #c0322b; --dem-soft: rgba(31,95,191,.10); --rep-soft: rgba(192,50,43,.10);
+  --accent: #2d6a4f; --chip: #eceee9; --warn-bg: #fff6e0; --warn-ink: #6b4a00;
+  --display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #121418; --panel: #1b1e24; --ink: #eceef1; --muted: #a9afba; --rule: #30353e;
+  --dem: #7aaaff; --rep: #ff8077; --dem-soft: rgba(122,170,255,.14); --rep-soft: rgba(255,128,119,.14);
+  --accent: #6fcf97; --chip: #262a32; --warn-bg: #2e2715; --warn-ink: #f2d38a; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #121418; --panel: #1b1e24; --ink: #eceef1; --muted: #a9afba; --rule: #30353e;
+  --dem: #7aaaff; --rep: #ff8077; --dem-soft: rgba(122,170,255,.14); --rep-soft: rgba(255,128,119,.14);
+  --accent: #6fcf97; --chip: #262a32; --warn-bg: #2e2715; --warn-ink: #f2d38a; color-scheme: dark }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5;
+  padding: 18px max(16px, env(safe-area-inset-right, 0px)) 40px max(16px, env(safe-area-inset-left, 0px)); }
+a { color: var(--dem); }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.skip { position: absolute; left: -9999px; } .skip:focus { left: 16px; top: 8px; background: var(--panel); padding: 6px 10px; z-index: 10; }
+.wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 16px; }
+header { border-bottom: 3px solid var(--ink); padding-bottom: 12px; display: grid; gap: 8px; }
+h1 { font-family: var(--display); font-weight: 700; font-size: clamp(30px, 5vw, 46px); line-height: 1.02; margin: 0; letter-spacing: .2px; }
+.byline { margin: 0; font-weight: 500; }
+.byline span { color: var(--muted); font-weight: 400; }
+.intro { max-width: 78ch; margin: 0; }
+.headrow { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.tab { font-family: var(--display); font-size: 20px; font-weight: 600; letter-spacing: .6px; text-transform: uppercase; padding: 6px 14px;
+  border: 2px solid var(--ink); background: transparent; color: var(--ink); cursor: pointer; border-radius: 4px; }
+.tab[aria-selected="true"] { background: var(--ink); color: var(--bg); }
+.tab:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible, summary:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.sim-flag { display: inline-flex; align-items: center; gap: 6px; background: var(--warn-bg); color: var(--warn-ink); border-radius: 4px;
+  padding: 4px 10px; font-size: 13px; font-weight: 600; }
+details.help { background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 0 16px; }
+details.help > summary { cursor: pointer; padding: 10px 0; font-weight: 600; }
+details.help[open] > summary { border-bottom: 1px solid var(--rule); margin-bottom: 10px; }
+.helpgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 8px 24px; padding-bottom: 12px; }
+.helpgrid h3 { font-family: var(--display); font-size: 19px; text-transform: uppercase; letter-spacing: .5px; margin: 4px 0; }
+.helpgrid ol, .helpgrid ul { margin: 0; padding-left: 20px; }
+.helpgrid li { margin-bottom: 4px; }
+dl.gloss { margin: 0; display: grid; gap: 6px; }
+dl.gloss dt { font-weight: 600; } dl.gloss dd { margin: 0 0 4px; color: var(--muted); }
+.bench { display: grid; grid-template-columns: minmax(0, 380px) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 860px) { .bench { grid-template-columns: minmax(0, 1fr); } }
+.panel { background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 14px 16px; display: grid; gap: 12px; min-width: 0; }
+.panel h2 { font-family: var(--display); font-size: 22px; font-weight: 600; margin: 0; text-transform: uppercase; letter-spacing: .6px; }
+.label { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; }
+.row { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: center; }
+.row input[type=range] { grid-column: 1 / -1; width: 100%; accent-color: var(--accent); }
+.val { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 13px; }
+.batch { border-top: 1px solid var(--rule); padding-top: 10px; display: grid; gap: 6px; }
+.batch-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.batch-name { font-weight: 600; }
+.batch-when { font-size: 12px; color: var(--muted); }
+.presets { display: flex; flex-wrap: wrap; gap: 6px; }
+button.chip { font: 500 13px var(--body); padding: 5px 10px; border-radius: 999px; border: 1px solid var(--rule); background: var(--chip); color: var(--ink); cursor: pointer; }
+button.chip[aria-pressed="true"] { border-color: var(--ink); background: var(--ink); color: var(--bg); }
+.preset-desc { font-size: 13px; margin: 0; min-height: 2.9em; }
+select { font: 14px var(--body); padding: 6px 8px; border-radius: 4px; border: 1px solid var(--rule); background: var(--panel); color: var(--ink); width: 100%; }
+.board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 520px) { .board { grid-template-columns: minmax(0, 1fr); } }
+.tile { border: 1px solid var(--rule); border-radius: 6px; padding: 8px 10px; }
+.tile .big { font-family: var(--display); font-size: 34px; font-weight: 700; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.d { color: var(--dem); } .r { color: var(--rep); }
+.chartbox { width: 100%; overflow-x: auto; }
+svg { display: block; width: 100%; height: auto; }
+.note { font-size: 13px; color: var(--muted); margin: 0; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { text-align: left; padding: 5px 6px; border-bottom: 1px solid var(--rule); }
+th { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; }
+td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; text-align: right; }
+.callbar, .sharebar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.btn { font: 600 15px var(--body); padding: 9px 14px; border-radius: 5px; border: 2px solid var(--ink); background: var(--panel); color: var(--ink); cursor: pointer; }
+.btn.small { font-size: 13px; padding: 6px 10px; }
+.btn.primary { background: var(--ink); color: var(--bg); }
+.btn.dem { border-color: var(--dem); color: var(--dem); } .btn.rep { border-color: var(--rep); color: var(--rep); }
+.btn[disabled] { opacity: .4; cursor: not-allowed; }
+.share-out { flex: 1 1 220px; min-width: 0; font: 12px var(--mono); padding: 6px 8px; border: 1px solid var(--rule); border-radius: 4px; background: var(--bg); color: var(--ink); }
+.status { font-weight: 600; min-height: 1.4em; }
+.tablewrap { overflow-x: auto; max-height: 340px; overflow-y: auto; }
+footer { border-top: 1px solid var(--rule); padding-top: 12px; display: grid; gap: 6px; font-size: 13px; color: var(--muted); }
+footer p { margin: 0; max-width: 100ch; }
+footer strong { color: var(--ink); font-weight: 600; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to the simulation</a>
+<div class="wrap">
+  <header>
+    <h1>Why the Lead Changes: Simulating Blue and Red Shifts in Vote Counting</h1>
+    <p class="byline">R. Michael Alvarez <span>· California Institute of Technology</span></p>
+    <p class="intro">In many states, a large share of ballots is counted after election night: mail ballots that arrive or are dropped off late, and provisional ballots that must be checked first. The voters who cast those ballots tend to differ from early voters, so the lead can change as counting continues without anything having gone wrong. This simulation lets you change who votes which way and the order ballots are counted, and watch the lead move.</p>
+    <div class="headrow">
+      <span class="sim-flag" role="note">Simulation only: invented ballots, not real election results or a forecast.</span>
+      <div class="tabs" role="tablist" aria-label="Mode">
+        <button class="tab" role="tab" id="tab-explore" aria-selected="true" aria-controls="explore">Explore</button>
+        <button class="tab" role="tab" id="tab-game" aria-selected="false" aria-controls="game" tabindex="-1">Call the race</button>
+      </div>
+    </div>
+  </header>
+
+  <details class="help" id="howto">
+    <summary>How to use this page</summary>
+    <div class="helpgrid">
+      <div>
+        <h3>Explore</h3>
+        <ol>
+          <li>Pick a scenario button to load a ready-made example.</li>
+          <li>Move the sliders: how younger and older voters lean, and how big and how young each batch of ballots is.</li>
+          <li>Change the counting order and compare the election-night lead with the final result.</li>
+        </ol>
+      </div>
+      <div>
+        <h3>Call the race</h3>
+        <ol>
+          <li>Pick a round. Everyone who picks the same round sees the same race, so a class can play together.</li>
+          <li>Press <em>Next report</em> to release results one batch at a time.</li>
+          <li>Call the winner when you're sure. A correct call scores 100 minus the percent counted; a wrong call scores zero.</li>
+        </ol>
+      </div>
+      <div>
+        <h3>How the simulation works</h3>
+        <ul>
+          <li>500,000 ballots fall into four batches: early mail, in person, late mail, and provisional.</li>
+          <li>Each batch's Democratic share is set by its mix of voters under and over 45, plus an optional “party strategy” effect for years when parties pushed different voting methods.</li>
+          <li>Batches are reported in the order you choose. Nothing about the voters changes between counting orders.</li>
+          <li>In <em>Call the race</em>, each report adds a little random variation, as real precincts do.</li>
+        </ul>
+      </div>
+    </div>
+  </details>
+
+  <main id="main" class="wrap" style="gap:16px">
+  <!-- ================= EXPLORE ================= -->
+  <section id="explore" class="bench" role="tabpanel" aria-labelledby="tab-explore">
+    <div class="panel">
+      <h2>Scenario</h2>
+      <div class="presets" id="presets" role="group" aria-label="Ready-made scenarios"></div>
+      <p class="preset-desc" id="preset-desc" aria-live="polite"></p>
+      <div>
+        <label class="label" for="order">Counting order</label>
+        <select id="order"></select>
+      </div>
+      <div class="label">How each age group votes (Democratic share of the two-party vote)</div>
+      <div class="row"><label for="pY">Voters under 45</label><span class="val" id="pY-v"></span><input type="range" id="pY" min="35" max="75" step="1"></div>
+      <div class="row"><label for="pO">Voters 45 and older</label><span class="val" id="pO-v"></span><input type="range" id="pO" min="30" max="65" step="1"></div>
+      <div id="batches"></div>
+      <div class="sharebar">
+        <button class="btn small" type="button" id="share-explore">Copy link to this scenario</button>
+        <span class="note" id="share-explore-msg" aria-live="polite"></span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="board">
+        <div class="tile"><div class="label">End of election night</div><div class="big" id="t-night"></div><div class="note" id="t-night-sub"></div></div>
+        <div class="tile"><div class="label">Final count</div><div class="big" id="t-final"></div><div class="note" id="t-final-sub"></div></div>
+        <div class="tile"><div class="label">Shift after election night</div><div class="big" id="t-shift"></div><div class="note">Toward the party named</div></div>
+      </div>
+      <div class="chartbox"><svg id="chart" viewBox="0 0 760 380" role="img" aria-labelledby="chart-desc"><desc id="chart-desc"></desc></svg></div>
+      <p class="note" id="explain"></p>
+      <p class="note"><strong>Simulated data.</strong> These are invented ballots for teaching, not results or a forecast for any real election.</p>
+    </div>
+  </section>
+
+  <!-- ================= GAME ================= -->
+  <section id="game" class="bench" role="tabpanel" aria-labelledby="tab-game" hidden>
+    <div class="panel">
+      <h2>Call the race</h2>
+      <p class="note">Reports come in one at a time, just as on election night. Call the winner when you're confident: a correct call scores more the earlier you make it, and a wrong call scores zero. Everyone who picks the same round sees the same race.</p>
+      <div>
+        <label class="label" for="round">Round</label>
+        <select id="round"></select>
+      </div>
+      <div class="callbar">
+        <button class="btn primary" type="button" id="next">Next report</button>
+        <button class="btn dem" type="button" id="callD">Call it: Democrat</button>
+        <button class="btn rep" type="button" id="callR">Call it: Republican</button>
+      </div>
+      <div class="status" id="gstatus" aria-live="polite"></div>
+      <div class="tile"><div class="label">Your score this round</div><div class="big" id="gscore">—</div><div class="note">Points = 100 − percent counted when you called (wrong call = 0).</div></div>
+      <button class="btn" type="button" id="reveal">Reveal the batches</button>
+      <div class="sharebar">
+        <button class="btn small" type="button" id="share-game">Copy link to this round</button>
+        <span class="note" id="share-game-msg" aria-live="polite"></span>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="board">
+        <div class="tile"><div class="label">Counted so far</div><div class="big" id="g-counted">0%</div></div>
+        <div class="tile"><div class="label">Current margin</div><div class="big" id="g-margin" aria-live="polite">—</div></div>
+        <div class="tile"><div class="label">Latest report</div><div class="big" id="g-when" style="font-size:24px">—</div></div>
+      </div>
+      <div class="chartbox"><svg id="gchart" viewBox="0 0 760 380" role="img" aria-labelledby="gchart-desc"><desc id="gchart-desc"></desc></svg></div>
+      <div class="tablewrap"><table><caption class="sr-only">Reports released so far</caption><thead><tr><th scope="col">Report</th><th scope="col">Ballot type</th><th scope="col" class="num">Counted</th><th scope="col" class="num">Margin</th></tr></thead><tbody id="glog"></tbody></table></div>
+      <p class="note" id="greveal"></p>
+      <p class="note"><strong>Simulated data.</strong> Each round is an invented race, not a real election.</p>
+    </div>
+  </section>
+  </main>
+
+  <details class="help" id="glossary">
+    <summary>Glossary</summary>
+    <dl class="gloss" style="padding-bottom:12px">
+      <dt>Blue shift / red shift</dt><dd>Movement in the vote margin toward the Democrat (blue) or the Republican (red) after election night, as more ballots are counted.</dd>
+      <dt>Vote-by-mail ballot</dt><dd>A ballot mailed to the voter and returned by mail, at a drop box, or at a vote center. Ballots that arrive early can be processed before Election Day; ones that arrive late are counted afterward.</dd>
+      <dt>Provisional ballot</dt><dd>A ballot cast in person when a voter's eligibility can't be confirmed on the spot. It is counted only after election officials verify it, often days or weeks later.</dd>
+      <dt>Election night</dt><dd>The first results released after polls close. They usually include early mail ballots and in-person votes, but not everything.</dd>
+      <dt>Canvass</dt><dd>The official process after Election Day of processing and counting the remaining ballots and checking the totals.</dd>
+      <dt>Certification</dt><dd>The formal approval of the final, official results once the canvass is complete.</dd>
+    </dl>
+  </details>
+
+  <footer>
+    <p><strong>Why the Lead Changes: Simulating Blue and Red Shifts in Vote Counting</strong> · Version 1.0 · October 27, 2026 · Created by R. Michael Alvarez, California Institute of Technology.</p>
+    <p>Based on the research in Yimeng Li, Michelle Hyun, and R. Michael Alvarez, “Why Do Election Results Change after Election Day? The ‘Blue Shift’ in California Elections,” <em>Political Research Quarterly</em> 75(3): 860–874 (2022), <a href="https://doi.org/10.1177/10659129211033340">doi.org/10.1177/10659129211033340</a>. The voters, batches and rounds on this page are invented for teaching; the scenarios labeled “California-style” and “Pennsylvania 2020-style” illustrate those counts and are not fitted to real data.</p>
+    <p>Built with AI assistance: the code and text were drafted with Claude Opus 5.5 (model ID claude-opus-5-5), an AI model made by Anthropic, working with the author. The page runs entirely in your browser and collects no data. Released under the <a href="LICENSE">MIT License</a>; you are free to use, adapt and share it with attribution.</p>
+    <p>Cite as: Alvarez, R. Michael. 2026. <em>Why the Lead Changes: Simulating Blue and Red Shifts in Vote Counting</em> (version 1.0). Interactive web simulation, California Institute of Technology.</p>
+  </footer>
+</div>
+
+<script>
+(function () {
+  const N = 500000;
+  // Batch types. b[k] = [size % of all ballots, % under 45, party-strategy points toward the Democrat (negative = toward the Republican)].
+  const TYPES = {
+    early: { name: "Early mail ballots", when: "Arrived before Election Day", reports: 1, labels: ["8:05 pm"] },
+    inperson: { name: "In-person ballots", when: "Early voting and Election Day", reports: 4, labels: ["9 pm", "10 pm", "11 pm", "1 am"] },
+    late: { name: "Late mail ballots", when: "Dropped off or arrived on Election Day", reports: 4, labels: ["Wed", "Thu", "Fri", "Mon"] },
+    prov: { name: "Provisional ballots", when: "Checked and counted last", reports: 2, labels: ["Week 2", "Week 3"] },
+  };
+  const ORDERS = {
+    ca: { label: "California: early mail, in person, late mail, provisional", seq: ["early", "inperson", "late", "prov"], night: 2 },
+    mailfirst: { label: "Late mail and provisionals first (same ballots, reversed)", seq: ["late", "prov", "early", "inperson"], night: 2 },
+    pa: { label: "Mail can't be processed early: in person first, then all mail", seq: ["inperson", "early", "late", "prov"], night: 1 },
+  };
+  const PRESETS = {
+    ca: { title: "California-style count", desc: "Early mail ballots, mostly from older voters, are counted first. Late mail and provisional ballots, from younger voters, come last, so the lead moves toward the Democrat.",
+      order: "ca", pY: 60, pO: 45, b: { early: [40, 20, 0], inperson: [30, 40, 0], late: [22, 65, 0], prov: [8, 75, 0] } },
+    rev: { title: "Same ballots, reversed order", desc: "Exactly the same voters and ballots, but late mail and provisionals are counted first. The path of the count changes; the final result does not.",
+      order: "mailfirst", pY: 60, pO: 45, b: { early: [40, 20, 0], inperson: [30, 40, 0], late: [22, 65, 0], prov: [8, 75, 0] } },
+    pa: { title: "Pennsylvania 2020-style", desc: "Mail ballots can't be processed before Election Day, and the parties urged different voting methods. A large early Republican lead becomes a Democratic win.",
+      order: "pa", pY: 58, pO: 46, b: { early: [25, 30, 15], inperson: [55, 35, -8], late: [17, 50, 12], prov: [3, 60, 0] } },
+    red: { title: "A red shift", desc: "Here the late-counted ballots lean Republican, so the Democrat's election-night lead disappears as counting continues.",
+      order: "ca", pY: 54, pO: 47, b: { early: [45, 25, 9], inperson: [20, 35, -2], late: [27, 45, -10], prov: [8, 55, -6] } },
+  };
+  const copyOf = (k) => ({ order: PRESETS[k].order, pY: PRESETS[k].pY, pO: PRESETS[k].pO, b: JSON.parse(JSON.stringify(PRESETS[k].b)), key: k });
+  let state = copyOf("ca");
+
+  const $ = (id) => document.getElementById(id);
+  const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const fmtM = (m) => (Math.abs(m) < 0.05 ? "Tied" : (m > 0 ? "D +" : "R +") + Math.abs(m).toFixed(1));
+  const wordM = (m) => (Math.abs(m) < 0.05 ? "tied" : (m > 0 ? "Democrat ahead by " : "Republican ahead by ") + Math.abs(m).toFixed(1) + " points");
+  const cls = (m) => (m > 0.05 ? "d" : m < -0.05 ? "r" : "");
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+
+  // ---------- model ----------
+  function batchDshare(s, k) { const [, y, mode] = s.b[k]; return (y / 100) * s.pY + (1 - y / 100) * s.pO + mode; }
+  function simulate(s, noise) {
+    const tot = Object.values(s.b).reduce((a, v) => a + v[0], 0) || 1;
+    const seq = ORDERS[s.order].seq; let cumD = 0, cumR = 0, cumN = 0; const pts = [{ x: 0, m: null }]; const bounds = []; let night = null;
+    seq.forEach((k, bi) => {
+      const n = N * s.b[k][0] / tot; const reps = TYPES[k].reports; const base = batchDshare(s, k);
+      for (let r = 0; r < reps; r++) {
+        const nn = n / reps; let d = base + (noise ? noise() : 0); d = Math.min(99, Math.max(1, d));
+        cumD += nn * d / 100; cumR += nn * (1 - d / 100); cumN += nn;
+        pts.push({ x: 100 * cumN / N, m: cumN ? 100 * (cumD - cumR) / cumN : 0, k, label: TYPES[k].labels[r] });
+      }
+      bounds.push({ x: 100 * cumN / N, k });
+      if (bi + 1 === ORDERS[s.order].night) night = { x: 100 * cumN / N, m: cumN ? 100 * (cumD - cumR) / cumN : 0 };
+    });
+    return { pts, bounds, night, final: pts[pts.length - 1].m };
+  }
+
+  // ---------- chart ----------
+  function drawChart(svg, sim, upto, opts = {}) {
+    const desc = svg.querySelector("desc").outerHTML;
+    const W = 760, H = 380, L = 56, R = 16, T = 18, B = 44;
+    const pts = sim.pts.slice(1, upto === undefined ? undefined : upto + 1);
+    const allM = sim.pts.slice(1).map((p) => p.m);
+    let lim = Math.max(4, Math.ceil(Math.max(...allM.map(Math.abs)) + 1));
+    if (opts.fixedLim) lim = opts.fixedLim;
+    const xs = (x) => L + (W - L - R) * x / 100, ys = (m) => T + (H - T - B) * (lim - m) / (2 * lim);
+    const ink = css("--ink"), muted = css("--muted"), rule = css("--rule"), dem = css("--dem"), rep = css("--rep");
+    let g = desc + `<rect x="${L}" y="${T}" width="${W - L - R}" height="${ys(0) - T}" fill="${css("--dem-soft")}"/>`;
+    g += `<rect x="${L}" y="${ys(0)}" width="${W - L - R}" height="${H - B - ys(0)}" fill="${css("--rep-soft")}"/>`;
+    const step = lim > 12 ? 5 : lim > 6 ? 2 : 1;
+    for (let v = -Math.floor(lim / step) * step; v <= lim; v += step) {
+      g += `<line x1="${L}" x2="${W - R}" y1="${ys(v)}" y2="${ys(v)}" stroke="${rule}" stroke-width="${v === 0 ? 2 : 1}"/>`;
+      g += `<text x="${L - 8}" y="${ys(v) + 4}" text-anchor="end" font-size="12" font-family="IBM Plex Mono, monospace" fill="${muted}">${v === 0 ? "0" : (v > 0 ? "D+" : "R+") + Math.abs(v)}</text>`;
+    }
+    for (let x = 0; x <= 100; x += 25) g += `<text x="${xs(x)}" y="${H - B + 18}" text-anchor="middle" font-size="12" font-family="IBM Plex Mono, monospace" fill="${muted}">${x}%</text>`;
+    g += `<text x="${(L + W - R) / 2}" y="${H - 6}" text-anchor="middle" font-size="13" fill="${muted}">Percent of ballots counted</text>`;
+    if (opts.showBounds !== false) sim.bounds.forEach((b, i) => {
+      if (i === sim.bounds.length - 1) return;
+      g += `<line x1="${xs(b.x)}" x2="${xs(b.x)}" y1="${T}" y2="${H - B}" stroke="${muted}" stroke-dasharray="3 4" stroke-width="1"/>`;
+    });
+    if (sim.night && opts.showNight !== false && (upto === undefined || sim.pts.findIndex((p) => p.x >= sim.night.x - 1e-9) <= upto)) {
+      g += `<line x1="${xs(sim.night.x)}" x2="${xs(sim.night.x)}" y1="${T}" y2="${H - B}" stroke="${ink}" stroke-width="2"/>`;
+      const right = xs(sim.night.x) > W - 170;
+      g += `<text x="${xs(sim.night.x) + (right ? -6 : 6)}" y="${T + 34}" text-anchor="${right ? "end" : "start"}" font-size="12" font-weight="600" fill="${ink}">End of election night</text>`;
+    }
+    if (pts.length) {
+      let d = `M ${xs(pts[0].x)} ${ys(pts[0].m)}`; pts.forEach((p) => (d += ` L ${xs(p.x)} ${ys(p.m)}`));
+      g += `<path d="${d}" fill="none" stroke="${ink}" stroke-width="2.5"/>`;
+      // Democratic-lead points are circles, Republican-lead points are squares, so the chart reads without color.
+      pts.forEach((p) => {
+        const c = p.m >= 0 ? dem : rep, px = xs(p.x), py = ys(p.m), stroke = css("--panel");
+        g += p.m >= 0 ? `<circle cx="${px}" cy="${py}" r="4.8" fill="${c}" stroke="${stroke}" stroke-width="1.5"/>`
+                      : `<rect x="${px - 4.5}" y="${py - 4.5}" width="9" height="9" fill="${c}" stroke="${stroke}" stroke-width="1.5"/>`;
+      });
+      const last = pts[pts.length - 1];
+      g += `<text x="${Math.min(xs(last.x) + 8, W - R - 4)}" y="${ys(last.m) - 8}" text-anchor="${xs(last.x) > W - 90 ? "end" : "start"}" font-size="14" font-weight="700" fill="${last.m >= 0 ? dem : rep}">${fmtM(last.m)}</text>`;
+    }
+    g += `<text x="${L + 6}" y="${T + 14}" font-size="12" fill="${dem}" font-weight="600">● Democrat ahead</text>`;
+    g += `<text x="${L + 6}" y="${H - B - 6}" font-size="12" fill="${rep}" font-weight="600">■ Republican ahead</text>`;
+    g += `<text x="${W - R - 4}" y="${T + 14}" text-anchor="end" font-size="11" fill="${muted}" font-style="italic">Simulated data</text>`;
+    svg.innerHTML = g;
+  }
+
+  // ---------- explore UI ----------
+  const presetBox = $("presets");
+  Object.entries(PRESETS).forEach(([k, p]) => {
+    const b = document.createElement("button"); b.className = "chip"; b.textContent = p.title; b.type = "button"; b.dataset.key = k;
+    b.addEventListener("click", () => { state = copyOf(k); syncControls(); render(); });
+    presetBox.appendChild(b);
+  });
+  const orderSel = $("order");
+  Object.entries(ORDERS).forEach(([k, o]) => { const op = document.createElement("option"); op.value = k; op.textContent = o.label; orderSel.appendChild(op); });
+  orderSel.addEventListener("change", () => { state.order = orderSel.value; state.key = null; render(); });
+  ["pY", "pO"].forEach((id) => $(id).addEventListener("input", (e) => { state[id] = +e.target.value; state.key = null; render(); }));
+
+  const bBox = $("batches");
+  const SLIDERS = [["s", 0, "Share of all ballots", 0, 70], ["y", 1, "Voters under 45 in this batch", 0, 100], ["m", 2, "Party strategy effect", -15, 15]];
+  Object.entries(TYPES).forEach(([k, t]) => {
+    const div = document.createElement("div"); div.className = "batch"; div.setAttribute("role", "group"); div.setAttribute("aria-label", t.name);
+    div.innerHTML = `<div class="batch-head"><span class="batch-name">${t.name}</span><span class="batch-when">${t.when}</span></div>` +
+      SLIDERS.map(([suf, , lab, lo, hi]) => `<div class="row"><label for="${k}-${suf}">${lab}<span class="sr-only"> (${t.name})</span></label><span class="val" id="${k}-${suf}-v"></span><input type="range" id="${k}-${suf}" min="${lo}" max="${hi}" step="1"></div>`).join("");
+    bBox.appendChild(div);
+    SLIDERS.forEach(([suf, idx]) => $(`${k}-${suf}`).addEventListener("input", (e) => { state.b[k][idx] = +e.target.value; state.key = null; render(); }));
+  });
+
+  function syncControls() {
+    orderSel.value = state.order; $("pY").value = state.pY; $("pO").value = state.pO;
+    Object.keys(TYPES).forEach((k) => { $(`${k}-s`).value = state.b[k][0]; $(`${k}-y`).value = state.b[k][1]; $(`${k}-m`).value = state.b[k][2]; });
+  }
+  function render() {
+    [...presetBox.children].forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.key === state.key)));
+    $("preset-desc").textContent = state.key ? PRESETS[state.key].desc : "Custom scenario: you've changed the settings. Pick a scenario button to start over.";
+    $("pY-v").textContent = state.pY + "% D"; $("pO-v").textContent = state.pO + "% D";
+    $("pY").setAttribute("aria-valuetext", state.pY + " percent Democratic"); $("pO").setAttribute("aria-valuetext", state.pO + " percent Democratic");
+    const tot = Object.values(state.b).reduce((a, v) => a + v[0], 0) || 1;
+    Object.keys(TYPES).forEach((k) => {
+      const share = (100 * state.b[k][0] / tot).toFixed(0);
+      $(`${k}-s-v`).textContent = share + "%"; $(`${k}-s`).setAttribute("aria-valuetext", share + " percent of all ballots");
+      $(`${k}-y-v`).textContent = state.b[k][1] + "%"; $(`${k}-y`).setAttribute("aria-valuetext", state.b[k][1] + " percent under 45");
+      const m = state.b[k][2]; const mt = m === 0 ? "none" : (m > 0 ? "+" + m + " D" : "+" + (-m) + " R");
+      $(`${k}-m-v`).textContent = mt; $(`${k}-m`).setAttribute("aria-valuetext", m === 0 ? "none" : (Math.abs(m) + " points toward the " + (m > 0 ? "Democrat" : "Republican")));
+    });
+    const sim = simulate(state);
+    const nm = sim.night.m, fm = sim.final, sh = fm - nm;
+    $("t-night").textContent = fmtM(nm); $("t-night").className = "big " + cls(nm);
+    $("t-night-sub").textContent = sim.night.x.toFixed(0) + "% of ballots counted";
+    $("t-final").textContent = fmtM(fm); $("t-final").className = "big " + cls(fm);
+    const flipped = Math.sign(nm) !== Math.sign(fm) && Math.abs(nm) > 0.05 && Math.abs(fm) > 0.05;
+    $("t-final-sub").textContent = flipped ? "The leader changed after election night" : "Same leader as election night";
+    $("t-shift").textContent = (Math.abs(sh) < 0.05 ? "None" : (sh > 0 ? "D " : "R ") + Math.abs(sh).toFixed(1) + " pts"); $("t-shift").className = "big " + cls(sh);
+    $("chart-desc").textContent = `Simulated running margin as ballots are counted. At the end of election night, with ${sim.night.x.toFixed(0)}% counted, the ${wordM(nm)}. Final count: ${wordM(fm)}.` + (flipped ? " The leader changed after election night." : "");
+    drawChart($("chart"), sim);
+    const parts = ORDERS[state.order].seq.map((k) => `${TYPES[k].name.toLowerCase()} (${batchDshare(state, k).toFixed(0)}% D)`);
+    $("explain").textContent = "Counting order: " + parts.join(" → ") + ". Dashed lines mark where one type of ballot ends and the next begins.";
+  }
+
+  // ---------- game ----------
+  function rng(seed) { return function () { seed |= 0; seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+  function makeRound(n) {
+    for (let tries = 0; tries < 500; tries++) {
+      const r = rng(1000 * n + tries + 7); const u = (a, b) => a + (b - a) * r();
+      const orders = ["ca", "ca", "pa", "ca", "pa", "mailfirst"];
+      const s = { order: orders[(n - 1) % orders.length], pY: Math.round(u(52, 66)), pO: Math.round(u(40, 50)),
+        b: { early: [Math.round(u(25, 45)), Math.round(u(15, 35)), Math.round(u(-8, 10))], inperson: [Math.round(u(20, 45)), Math.round(u(30, 50)), Math.round(u(-10, 4))],
+             late: [Math.round(u(12, 28)), Math.round(u(45, 75)), Math.round(u(-6, 12))], prov: [Math.round(u(3, 9)), Math.round(u(55, 80)), 0] } };
+      const nz = () => (r() - 0.5) * 2.4;
+      const sim = simulate(s, nz);
+      if (Math.abs(sim.final) < 3.5 && Math.abs(sim.final) > 0.3 && (n % 3 === 0 || Math.sign(sim.night.m) !== Math.sign(sim.final))) return { s, sim };
+    }
+    const s = copyOf("ca"); return { s, sim: simulate(s) };
+  }
+  const roundSel = $("round");
+  for (let i = 1; i <= 8; i++) { const op = document.createElement("option"); op.value = i; op.textContent = "Round " + i; roundSel.appendChild(op); }
+  let G = null;
+  function startRound() { const { s, sim } = makeRound(+roundSel.value); G = { s, sim, shown: 0, called: null, score: null, revealed: false }; $("gstatus").textContent = ""; gRender(); }
+  function gRender() {
+    const { sim } = G; const last = G.shown ? sim.pts[G.shown] : null;
+    $("g-counted").textContent = last ? last.x.toFixed(0) + "%" : "0%";
+    $("g-margin").textContent = last ? fmtM(last.m) : "—"; $("g-margin").className = "big " + (last ? cls(last.m) : "");
+    $("g-when").textContent = last ? last.label : "Polls close";
+    $("gchart-desc").textContent = last ? `Simulated race, round ${roundSel.value}: after ${G.shown} report${G.shown > 1 ? "s" : ""} and ${last.x.toFixed(0)}% counted, ${wordM(last.m)}.` : `Simulated race, round ${roundSel.value}: no reports released yet.`;
+    drawChart($("gchart"), sim, G.shown, { showBounds: G.revealed, showNight: true, fixedLim: Math.max(4, Math.ceil(Math.max(...sim.pts.slice(1).map((p) => Math.abs(p.m))) + 1)) });
+    $("glog").innerHTML = sim.pts.slice(1, G.shown + 1).map((p, i) => `<tr><td>${i + 1}. ${p.label}</td><td>${TYPES[p.k].name}</td><td class="num">${p.x.toFixed(0)}%</td><td class="num ${cls(p.m)}">${fmtM(p.m)}</td></tr>`).join("");
+    const done = G.shown >= sim.pts.length - 1;
+    $("next").disabled = done; $("callD").disabled = $("callR").disabled = !!G.called || G.shown === 0;
+    $("gscore").textContent = G.score === null ? "—" : G.score;
+    if (done && !G.called) $("gstatus").textContent = `All ballots counted: ${fmtM(sim.final)}. You never called it — 0 points.`;
+    $("greveal").textContent = G.revealed ? ORDERS[G.s.order].seq.map((k) => `${TYPES[k].name}: ${(100 * G.s.b[k][0] / Object.values(G.s.b).reduce((a, v) => a + v[0], 0)).toFixed(0)}% of ballots, ${G.s.b[k][1]}% under 45, about ${batchDshare(G.s, k).toFixed(0)}% Democratic`).join(" · ") + `. Under-45 voters ${G.s.pY}% D; 45 and older ${G.s.pO}% D.` : "";
+  }
+  function call(party) {
+    if (G.called || !G.shown) return; const at = G.sim.pts[G.shown].x; const winner = G.sim.final > 0 ? "D" : "R";
+    G.called = party; G.score = party === winner ? Math.round(100 - at) : 0;
+    $("gstatus").textContent = `You called it for the ${party === "D" ? "Democrat" : "Republican"} at ${at.toFixed(0)}% counted. ` + (party === winner ? "Correct so far — keep revealing to see the final count." : "That call will be wrong — keep revealing to see why.");
+    gRender();
+  }
+  $("next").addEventListener("click", () => { if (G.shown < G.sim.pts.length - 1) { G.shown++; gRender(); } });
+  $("callD").addEventListener("click", () => call("D")); $("callR").addEventListener("click", () => call("R"));
+  $("reveal").addEventListener("click", () => { G.revealed = true; G.shown = G.sim.pts.length - 1; gRender(); });
+  roundSel.addEventListener("change", startRound);
+
+  // ---------- shareable links ----------
+  // Explore: #explore?preset=ca  or  #explore?o=ca&y=60&a=45&e=40,20,0&i=30,40,0&l=22,65,0&p=8,75,0
+  // Game:    #game?round=3
+  const BK = { early: "e", inperson: "i", late: "l", prov: "p" };
+  function linkFor(mode) {
+    const base = location.href.split("#")[0];
+    if (mode === "game") return `${base}#game?round=${roundSel.value}`;
+    if (state.key) return `${base}#explore?preset=${state.key}`;
+    const q = new URLSearchParams({ o: state.order, y: state.pY, a: state.pO });
+    Object.entries(BK).forEach(([k, c]) => q.set(c, state.b[k].join(",")));
+    return `${base}#explore?${q.toString()}`;
+  }
+  function readLink() {
+    const h = location.hash.slice(1); if (!h) return "explore";
+    const [mode, qs] = h.split("?"); const q = new URLSearchParams(qs || "");
+    if (mode === "game") { const r = clamp(parseInt(q.get("round"), 10) || 1, 1, 8); roundSel.value = String(r); return "game"; }
+    if (q.get("preset") && PRESETS[q.get("preset")]) { state = copyOf(q.get("preset")); return "explore"; }
+    if (q.get("o") && ORDERS[q.get("o")]) {
+      const s = { order: q.get("o"), pY: clamp(+q.get("y") || 60, 35, 75), pO: clamp(+q.get("a") || 45, 30, 65), b: {}, key: null };
+      let ok = true;
+      Object.entries(BK).forEach(([k, c]) => {
+        const v = (q.get(c) || "").split(",").map(Number);
+        if (v.length !== 3 || v.some((x) => !Number.isFinite(x))) ok = false;
+        else s.b[k] = [clamp(v[0], 0, 70), clamp(v[1], 0, 100), clamp(v[2], -15, 15)];
+      });
+      if (ok) state = s;
+    }
+    return "explore";
+  }
+  async function share(mode) {
+    const url = linkFor(mode); const msg = $(`share-${mode}-msg`);
+    try { await navigator.clipboard.writeText(url); msg.textContent = "Link copied."; }
+    catch (e) {
+      msg.textContent = "";
+      const inp = document.createElement("input"); inp.className = "share-out"; inp.readOnly = true; inp.value = url; inp.setAttribute("aria-label", "Link to copy");
+      msg.appendChild(inp); inp.focus(); inp.select();
+    }
+    try { history.replaceState(null, "", url); } catch (e) { /* ignore */ }
+  }
+  $("share-explore").addEventListener("click", () => share("explore"));
+  $("share-game").addEventListener("click", () => share("game"));
+
+  // ---------- tabs (click, plus arrow keys per the ARIA tabs pattern) ----------
+  const tabs = [$("tab-explore"), $("tab-game")];
+  function show(which, focus) {
+    $("explore").hidden = which !== "explore"; $("game").hidden = which !== "game";
+    tabs.forEach((t) => { const on = t.id === "tab-" + which; t.setAttribute("aria-selected", String(on)); t.tabIndex = on ? 0 : -1; if (on && focus) t.focus(); });
+    if (which === "game") gRender(); else render();
+  }
+  tabs.forEach((t, i) => {
+    t.addEventListener("click", () => show(t.id.slice(4)));
+    t.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowRight" || e.key === "ArrowLeft") { e.preventDefault(); show(tabs[(i + 1) % 2].id.slice(4), true); }
+    });
+  });
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { render(); if (G) gRender(); });
+
+  const mode = readLink();
+  syncControls(); startRound(); render(); show(mode);
+})();
+</script>
+</body>
+</html>
