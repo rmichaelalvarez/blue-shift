@@ -2,8 +2,9 @@
 
 An interactive teaching simulation of why election-night leads change as late mail ballots and provisional ballots are counted. Users can change who votes which way, how large and how young each batch of ballots is, and the order the batches are counted. They then watch the running margin move ("Explore"), or try to call a race as reports arrive ("Call the race").
 
-**Author:** R. Michael Alvarez, California Institute of Technology
-**Version:** 1.0 (October 27, 2026)
+**Author:** R. Michael Alvarez, California Institute of Technology  
+**Version:** 1.0 (October 27, 2026)  
+**Live site:** https://rmichaelalvarez.github.io/blue-shift/
 
 ## Background
 
@@ -27,7 +28,7 @@ All voters, batches and rounds are invented for teaching. They are not real elec
 1. Put these four files at the top level of the repository.
 2. In the repository, open **Settings → Pages**. Set **Source** to **Deploy from a branch**, choose **main** and **/ (root)**, then **Save**.
 3. After a minute or two, the site appears at `https://<username>.github.io/<repository-name>/`.
-4. Once you know that address, edit the `og:image` line near the top of `index.html` and replace `social-preview.png` with the full address. Many sites only show the preview image when given an absolute URL, for example `https://rmichaelalvarez.github.io/blue-shift/social-preview.png`.
+4. If you fork this to a different address, update the `og:url`, `og:image` and `canonical` lines near the top of `index.html` to point to your copy.
 
 ## Shareable links
 
@@ -47,7 +48,7 @@ The **Copy link** buttons make links that open the page in a particular state:
 
 ## How to cite
 
-Alvarez, R. Michael. 2026. *Why the Lead Changes: Simulating Blue and Red Shifts in Vote Counting* (version 1.0). Interactive web simulation, California Institute of Technology.
+Alvarez, R. Michael. 2026. *Why the Lead Changes: Simulating Blue and Red Shifts in Vote Counting* (version 1.0). Interactive web simulation, California Institute of Technology. https://rmichaelalvarez.github.io/blue-shift/
 
 ## License
 
